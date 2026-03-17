@@ -1,0 +1,85 @@
+---
+title: "Security"
+description: "Authentication modes, safe sharing practices, and security boundaries for CollabMD."
+---
+
+## Authentication modes
+
+CollabMD supports two active authentication strategies, selected with `--auth` or `AUTH_STRATEGY`.
+
+### `none` (default)
+
+No authentication is required. Anyone who can reach the URL has full read and write access to the
+vault. Use this mode only for local-only sessions where the server is not reachable from other
+machines.
+
+### `password`
+
+Start with `--auth password` to protect all `/api/*` and `/ws/*` routes with a host password and
+a signed session cookie.
+
+- If `--auth-password` (or `AUTH_PASSWORD`) is not set, CollabMD generates a password for that
+  host run and prints it to the terminal.
+- The session signing secret is also generated per run when `AUTH_SESSION_SECRET` is not set.
+- **Restarting the app rotates both the generated password and the session secret**, invalidating
+  any existing sessions.
+
+### `oidc` (reserved)
+
+<Note>
+  OIDC authentication (`--auth oidc`) is reserved for a future release. Passing `--auth oidc`
+  today has no effect.
+</Note>
+
+## When to enable auth
+
+<Warning>
+  The Cloudflare Tunnel URL grants write access to the vault unless authentication is enabled.
+  Always enable `--auth password` before sharing a tunnel URL or exposing the server on a
+  network outside your machine.
+</Warning>
+
+Enable password auth any time you share the workspace:
+
+```bash
+collabmd ~/my-vault --auth password
+```
+
+The generated password and the local or tunnel URL are printed to the terminal. Share both with
+your collaborators.
+
+To fix a known password instead of generating one:
+
+```bash
+collabmd ~/my-vault --auth password --auth-password "shared-secret"
+```
+
+## Sharing safely
+
+1. Start with `--auth password` before starting the tunnel.
+2. Copy the URL and password from the terminal output.
+3. Send both to your collaborators over a trusted channel.
+4. When the session is over, press `Ctrl+C`. The generated password is discarded.
+
+## File exposure boundaries
+
+- Only `.md`, `.markdown`, and `.mdx` files are indexed and accessible through the API.
+- The following directories are ignored entirely: `.obsidian`, `.git`, `.trash`, `node_modules`.
+- Arbitrary file paths outside the vault directory are not served.
+
+## Subpath deployments
+
+If CollabMD is mounted under a subpath (e.g., `/collabmd`) behind a reverse proxy, set
+`BASE_PATH` to match. This scopes all routes and assets to that prefix without any additional
+configuration.
+
+## Tunnel exposure
+
+If `cloudflared` is installed, CollabMD starts a Cloudflare Quick Tunnel by default unless you
+pass `--no-tunnel`. The tunnel URL is public and reachable from anywhere on the internet.
+
+To stay local-only:
+
+```bash
+collabmd --no-tunnel
+```

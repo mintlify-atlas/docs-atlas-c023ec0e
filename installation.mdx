@@ -1,0 +1,167 @@
+---
+title: "Installation"
+description: "All supported ways to install or run CollabMD: npx, Homebrew, source, and Docker."
+---
+
+## Requirements
+
+| Platform | Support |
+|----------|---------|
+| macOS | Supported |
+| Linux | Supported |
+| Windows | Supported via WSL2 only |
+
+- **Node.js 24+** is required for the `npx` and source install methods. Check your version with `node --version`.
+- Homebrew and Docker installs do not require a local Node.js installation on the host.
+
+<Warning>
+  `--auth oidc` is reserved for a future implementation and is not usable yet. Passing `oidc` as the auth strategy will display a placeholder message and will not protect your session. Use `--auth password` for access control today.
+</Warning>
+
+## Installation methods
+
+<Tabs>
+  <Tab title="npx (no install)">
+    Run CollabMD directly without installing anything globally. Node.js 24+ must be on your PATH.
+
+    ```bash
+    npx collabmd@latest ~/my-vault --no-tunnel
+    ```
+
+    Open `http://localhost:1234` to access the workspace.
+
+    **Verify it is working:**
+
+    ```text
+    http://localhost:1234
+    ```
+
+    Or check the version printed in the terminal on startup:
+
+    ```text
+    CollabMD v0.1.19
+    ```
+
+    <Note>
+      `npx` always fetches the latest published version. Pin to a specific version by replacing `@latest` with a version tag, such as `npx collabmd@0.1.19`.
+    </Note>
+  </Tab>
+
+  <Tab title="Homebrew">
+    Install CollabMD as a managed Homebrew formula. This gives you a persistent `collabmd` command without requiring Node.js on the host.
+
+    <CodeGroup>
+
+    ```bash Two-step
+    brew tap andes90/tap
+    brew install collabmd
+    ```
+
+    ```bash One-liner
+    brew install andes90/tap/collabmd
+    ```
+
+    </CodeGroup>
+
+    Once installed, start your vault:
+
+    ```bash
+    collabmd ~/my-vault --no-tunnel
+    ```
+
+    Open `http://localhost:1234` to access the workspace.
+
+    **Verify the installation:**
+
+    ```bash
+    collabmd --version
+    ```
+  </Tab>
+
+  <Tab title="From source">
+    Clone and build CollabMD locally. Node.js 24+ is required.
+
+    ```bash
+    git clone https://github.com/andes90/collabmd.git
+    cd collabmd
+    npm install
+    npm run build
+    npm link
+    ```
+
+    The `npm link` step is optional — it registers `collabmd` as a global command. Without it, run `node bin/collabmd.js` from the project directory instead.
+
+    Start your vault:
+
+    ```bash
+    collabmd ~/my-vault --no-tunnel
+    ```
+
+    Open `http://localhost:1234` to access the workspace.
+
+    **Verify the installation:**
+
+    ```bash
+    collabmd --version
+    ```
+  </Tab>
+
+  <Tab title="Docker">
+    Pull and run the published image. No Node.js or npm required on the host.
+
+    ```bash
+    docker run -p 1234:1234 -v /path/to/vault:/data ghcr.io/andes90/collabmd:latest
+    ```
+
+    Replace `/path/to/vault` with the absolute path to your local Markdown folder. The container mounts it at `/data` and listens on `0.0.0.0:1234`.
+
+    Open `http://localhost:1234` to access the workspace.
+
+    **Bootstrap from a private git repo (optional):**
+
+    ```bash
+    docker run \
+      -p 1234:1234 \
+      -v /path/to/persistent/vault:/data \
+      -e COLLABMD_GIT_REPO_URL=git@github.com:your-org/your-vault.git \
+      -e COLLABMD_GIT_SSH_PRIVATE_KEY_B64="$(base64 < ~/.ssh/id_ed25519 | tr -d '\n')" \
+      -e COLLABMD_GIT_USER_NAME="CollabMD Bot" \
+      -e COLLABMD_GIT_USER_EMAIL="bot@example.com" \
+      ghcr.io/andes90/collabmd:latest
+    ```
+
+    <Tip>
+      Use `docker compose up` with the included `docker-compose.yml` to run CollabMD alongside a local PlantUML server, avoiding the public PlantUML renderer entirely.
+    </Tip>
+  </Tab>
+</Tabs>
+
+## Verifying your install
+
+After starting CollabMD by any method, open `http://localhost:1234` in your browser. You should see the file explorer sidebar, the Markdown editor, and the live preview panel.
+
+For CLI-based verification, run:
+
+```bash
+collabmd --version
+```
+
+Expected output:
+
+```text
+collabmd v0.1.19
+```
+
+## CLI options reference
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `directory` | Path to the vault directory | Current directory |
+| `-p, --port` | Port to listen on | `1234` |
+| `--host` | Host to bind to | `127.0.0.1` |
+| `--auth` | Auth strategy: `none`, `password` | `none` |
+| `--auth-password` | Password for `--auth password` | Generated per run |
+| `--local-plantuml` | Start the bundled docker-compose PlantUML service | Off |
+| `--no-tunnel` | Disable Cloudflare Tunnel | Tunnel on by default |
+| `-v, --version` | Show version | |
+| `-h, --help` | Show help | |

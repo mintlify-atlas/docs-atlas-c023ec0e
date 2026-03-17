@@ -1,0 +1,103 @@
+---
+title: "CLI Reference"
+description: "Complete reference for all collabmd command-line arguments and flags."
+---
+
+## Usage
+
+```bash
+collabmd [directory] [options]
+```
+
+## Arguments
+
+<ParamField path="directory" type="string">
+  Path to the vault directory. Defaults to the current working directory if omitted.
+</ParamField>
+
+## Options
+
+<ParamField query="-p, --port" type="string">
+  Port to listen on.
+
+  **Default:** `1234`
+</ParamField>
+
+<ParamField query="--host" type="string">
+  Host to bind to.
+
+  **Default:** `HOST` environment variable, or `127.0.0.1` if not set.
+</ParamField>
+
+<ParamField query="--auth" type="string">
+  Authentication strategy. Accepted values: `none`, `password`.
+
+  `oidc` is reserved for a future release and is not yet usable.
+
+  **Default:** `none`
+</ParamField>
+
+<ParamField query="--auth-password" type="string">
+  Shared password used when `--auth password` is active. If not provided, CollabMD generates a
+  password for that host run and prints it to the terminal. Restarting the app rotates the
+  generated password.
+
+  **Default:** generated per run
+</ParamField>
+
+<ParamField query="--local-plantuml" type="boolean">
+  Start the bundled docker-compose PlantUML service before launching the server, then point
+  `PLANTUML_SERVER_URL` at it automatically. Requires Docker to be installed and running.
+
+  **Default:** off (disabled)
+</ParamField>
+
+<ParamField query="--no-tunnel" type="boolean">
+  Disable the automatic Cloudflare Quick Tunnel. Without this flag, CollabMD attempts to start a
+  tunnel when `cloudflared` is found on `PATH`.
+
+  **Default:** tunnel is enabled when `cloudflared` is installed
+</ParamField>
+
+<ParamField query="-v, --version" type="boolean">
+  Print the installed CollabMD version and exit.
+</ParamField>
+
+<ParamField query="-h, --help" type="boolean">
+  Print the help message and exit.
+</ParamField>
+
+## Examples
+
+```bash
+# Serve current directory locally
+collabmd --no-tunnel
+
+# Serve a specific vault locally
+collabmd ~/my-vault --no-tunnel
+
+# Use a custom port
+collabmd --port 3000 --no-tunnel
+
+# Share with collaborators using a generated password
+collabmd --auth password
+
+# Require an explicit password
+collabmd --auth password --auth-password "shared-secret"
+
+# Use the local docker-compose PlantUML service
+collabmd --local-plantuml
+
+# Serve an Obsidian vault
+collabmd ~/Documents/Obsidian/MyVault
+```
+
+## Expected startup output
+
+```text
+CollabMD v0.x.y
+Vault:  /path/to/your-vault
+Local:  http://localhost:1234
+Tunnel: disabled
+Ready for collaboration. Press Ctrl+C to stop.
+```

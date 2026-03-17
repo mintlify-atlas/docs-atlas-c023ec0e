@@ -1,0 +1,77 @@
+---
+title: "Cloudflare Tunnel"
+description: "Expose a CollabMD session over the internet using a Cloudflare Quick Tunnel, including WebSocket collaboration traffic."
+---
+
+CollabMD supports [Cloudflare Quick Tunnels](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) to make a running session accessible over the internet without any firewall or port-forwarding configuration. Because CollabMD uses same-origin WebSocket routing on `/ws/:file`, the tunnel carries both HTTP and WebSocket collaboration traffic automatically.
+
+<Warning>
+  The tunnel URL grants write access to the vault for anyone who has it. Always run with `--auth password` before sharing a tunnel URL publicly.
+</Warning>
+
+## Default behavior
+
+If `cloudflared` is installed, CollabMD starts a Quick Tunnel automatically at startup unless `--no-tunnel` is passed. The tunnel URL is printed to the terminal:
+
+```text
+CollabMD v0.x.y
+Vault:  /path/to/your-vault
+Local:  http://localhost:1234
+Tunnel: https://random-name.trycloudflare.com
+Ready for collaboration. Press Ctrl+C to stop.
+```
+
+## Installation
+
+<CodeGroup>
+
+```bash macOS
+brew install cloudflared
+```
+
+```bash Linux / Windows
+# See the official installer:
+# https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+```
+
+</CodeGroup>
+
+## Sharing a session safely
+
+Start CollabMD with password auth before sharing the tunnel URL:
+
+```bash
+collabmd ~/my-vault --auth password
+```
+
+CollabMD generates a password for that run and prints it in the terminal. Share the tunnel URL and password with your collaborator. Restarting the app rotates the password and session secret.
+
+To set an explicit password instead of using the generated one:
+
+```bash
+collabmd ~/my-vault --auth password --auth-password "shared-secret"
+```
+
+## Disabling the tunnel
+
+```bash
+collabmd --no-tunnel
+```
+
+## Environment variable overrides
+
+You can configure the tunnel target and behavior via environment variables:
+
+```bash
+# Override only the target port
+TUNNEL_TARGET_PORT=4000 collabmd
+
+# Override the full target URL
+TUNNEL_TARGET_URL=http://127.0.0.1:4000 collabmd
+
+# Pass extra flags to cloudflared
+CLOUDFLARED_EXTRA_ARGS="--loglevel info" collabmd
+
+# Use a custom cloudflared binary path
+CLOUDFLARED_BIN=/custom/path/cloudflared collabmd
+```

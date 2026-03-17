@@ -1,0 +1,220 @@
+---
+title: "Environment Variables"
+description: "Complete reference for all environment variables recognized by CollabMD."
+---
+
+Environment variables can be set in a `.env` file at the project root or passed directly in the
+shell. Copy the example file to get started:
+
+```bash
+cp .env.example .env
+```
+
+## Server
+
+<ParamField body="HOST" type="string">
+  Host interface to bind to.
+
+  **Default:** `127.0.0.1` (development), `0.0.0.0` (production / Docker image)
+</ParamField>
+
+<ParamField body="PORT" type="string">
+  HTTP and WebSocket port.
+
+  **Default:** `1234`
+</ParamField>
+
+<ParamField body="BASE_PATH" type="string">
+  URL path prefix for subpath deployments (e.g. `/collabmd`). Required when CollabMD is mounted
+  under a subpath by a reverse proxy.
+
+  **Default:** _(empty — served at root)_
+</ParamField>
+
+## Authentication
+
+<ParamField body="AUTH_STRATEGY" type="string">
+  Authentication strategy. Accepted values: `none`, `password`.
+
+  `oidc` is reserved for a future release.
+
+  **Default:** `none`
+</ParamField>
+
+<ParamField body="AUTH_PASSWORD" type="string">
+  Shared password for `AUTH_STRATEGY=password`. When left empty, CollabMD generates a password
+  per run and prints it to the terminal.
+
+  **Default:** generated per run
+</ParamField>
+
+<ParamField body="AUTH_SESSION_COOKIE_NAME" type="string">
+  Name of the session cookie set after successful authentication.
+
+  **Default:** `collabmd_auth`
+</ParamField>
+
+<ParamField body="AUTH_SESSION_SECRET" type="string">
+  Secret used to sign session cookies. When left empty, a secret is generated per run.
+  Restarting the app rotates the secret and invalidates existing sessions.
+
+  **Default:** generated per run
+</ParamField>
+
+## Vault
+
+<ParamField body="COLLABMD_VAULT_DIR" type="string">
+  Absolute path to the vault directory CollabMD reads and writes.
+
+  **Default:** current working directory
+</ParamField>
+
+<ParamField body="COLLABMD_GIT_ENABLED" type="boolean">
+  Enable or disable git integration in the UI and API.
+
+  **Default:** `true`
+</ParamField>
+
+## Git
+
+<ParamField body="COLLABMD_GIT_REPO_URL" type="string">
+  Remote git repository URL used to bootstrap the vault checkout on first boot. When set,
+  CollabMD clones the repo into `COLLABMD_VAULT_DIR` on startup and reuses an existing
+  same-origin checkout on subsequent starts.
+
+  **Default:** _(empty — no remote bootstrap)_
+</ParamField>
+
+<ParamField body="COLLABMD_GIT_SSH_PRIVATE_KEY_FILE" type="string">
+  Path to an SSH private key file for remote git authentication. Takes precedence over
+  `COLLABMD_GIT_SSH_PRIVATE_KEY_B64` when both are set.
+
+  **Default:** _(empty)_
+</ParamField>
+
+<ParamField body="COLLABMD_GIT_SSH_PRIVATE_KEY_B64" type="string">
+  Base64-encoded SSH private key. Used when no key file path is provided via
+  `COLLABMD_GIT_SSH_PRIVATE_KEY_FILE`.
+
+  **Default:** _(empty)_
+</ParamField>
+
+<ParamField body="COLLABMD_GIT_SSH_KNOWN_HOSTS_FILE" type="string">
+  Path to a `known_hosts` file for strict SSH host verification. When not set, SSH falls back to
+  `StrictHostKeyChecking=accept-new`.
+
+  **Default:** _(empty)_
+</ParamField>
+
+<ParamField body="COLLABMD_GIT_USER_NAME" type="string">
+  Git author and committer name configured for in-app commits in git-backed deployments.
+
+  **Default:** _(empty)_
+</ParamField>
+
+<ParamField body="COLLABMD_GIT_USER_EMAIL" type="string">
+  Git author and committer email configured for in-app commits in git-backed deployments.
+
+  **Default:** _(empty)_
+</ParamField>
+
+## Diagrams
+
+<ParamField body="PLANTUML_SERVER_URL" type="string">
+  Base URL of the upstream PlantUML server used for server-side SVG rendering.
+
+  **Default:** `https://www.plantuml.com/plantuml`
+</ParamField>
+
+## WebSocket
+
+<ParamField body="WS_BASE_PATH" type="string">
+  WebSocket base path.
+
+  **Default:** `/ws`
+</ParamField>
+
+<ParamField body="PUBLIC_WS_BASE_URL" type="string">
+  Public WebSocket URL override for reverse-proxy setups where the WebSocket endpoint differs
+  from the app origin. Not required for standard same-origin deployments.
+
+  **Default:** _(empty — derived from app origin)_
+</ParamField>
+
+<ParamField body="WS_HEARTBEAT_INTERVAL_MS" type="string">
+  Interval in milliseconds between heartbeat checks used to evict dead clients.
+
+  **Default:** `30000`
+</ParamField>
+
+<ParamField body="WS_ROOM_IDLE_GRACE_MS" type="string">
+  Delay in milliseconds before closing an empty collaboration room and flushing its state to
+  disk.
+
+  **Default:** `15000`
+</ParamField>
+
+<ParamField body="WS_MAX_BUFFERED_AMOUNT_BYTES" type="string">
+  Maximum outbound buffer size per WebSocket connection, in bytes.
+
+  **Default:** `16777216` (16 MiB)
+</ParamField>
+
+<ParamField body="WS_MAX_PAYLOAD_BYTES" type="string">
+  Maximum inbound WebSocket frame size, in bytes.
+
+  **Default:** `16777216` (16 MiB)
+</ParamField>
+
+## HTTP Timeouts
+
+<ParamField body="HTTP_KEEP_ALIVE_TIMEOUT_MS" type="string">
+  Keep-alive timeout in milliseconds.
+
+  **Default:** `5000`
+</ParamField>
+
+<ParamField body="HTTP_HEADERS_TIMEOUT_MS" type="string">
+  Timeout in milliseconds for reading request headers.
+
+  **Default:** `60000`
+</ParamField>
+
+<ParamField body="HTTP_REQUEST_TIMEOUT_MS" type="string">
+  Request timeout in milliseconds.
+
+  **Default:** `30000`
+</ParamField>
+
+## Tunnel
+
+<ParamField body="CLOUDFLARED_BIN" type="string">
+  Path to the `cloudflared` binary.
+
+  **Default:** `cloudflared` (resolved from `PATH`)
+</ParamField>
+
+<ParamField body="TUNNEL_TARGET_HOST" type="string">
+  Host that the Cloudflare Tunnel forwards traffic to.
+
+  **Default:** `127.0.0.1`
+</ParamField>
+
+<ParamField body="TUNNEL_TARGET_PORT" type="string">
+  Port that the Cloudflare Tunnel forwards traffic to.
+
+  **Default:** `1234`
+</ParamField>
+
+<ParamField body="TUNNEL_TARGET_URL" type="string">
+  Full target URL override for the Cloudflare Tunnel. When set, `TUNNEL_TARGET_HOST` and
+  `TUNNEL_TARGET_PORT` are ignored.
+
+  **Default:** _(empty — constructed from `TUNNEL_TARGET_HOST` and `TUNNEL_TARGET_PORT`)_
+</ParamField>
+
+<ParamField body="CLOUDFLARED_EXTRA_ARGS" type="string">
+  Additional flags passed verbatim to the `cloudflared` process.
+
+  **Default:** _(empty)_
+</ParamField>

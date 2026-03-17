@@ -1,0 +1,136 @@
+---
+title: "Git integration"
+description: "Stage files, commit, and push from the CollabMD UI. Bootstrap a vault from a private git repository on startup."
+---
+
+CollabMD includes a git panel for managing changes from inside the browser and supports bootstrapping the vault from a private git repository at startup.
+
+<CardGroup cols={2}>
+  <Card title="In-app git panel" icon="code-branch">
+    Stage files, write a commit message, and commit without leaving CollabMD
+  </Card>
+  <Card title="Push from the UI" icon="arrow-up">
+    Push committed changes to the remote directly from the git panel
+  </Card>
+  <Card title="Git-backed vault bootstrap" icon="cloud-arrow-down">
+    Clone a private repo on first boot and reuse the checkout on restart
+  </Card>
+  <Card title="SSH authentication" icon="key">
+    Authenticate with a private repo using a file-based or base64-encoded SSH key
+  </Card>
+</CardGroup>
+
+## Git panel
+
+When CollabMD is running inside a git repository, the git panel becomes available in the sidebar. It refreshes automatically every 10 seconds.
+
+The panel shows:
+
+- The current branch name and sync status (commits ahead / behind)
+- Staged and unstaged changed files, grouped by section
+- A diff summary of local changes
+
+For each changed file you can:
+
+- Click to view the diff
+- **Stage** the file to include it in the next commit
+- **Unstage** a previously staged file
+- **Reset** the file to its last committed state
+
+## Committing staged changes
+
+<Steps>
+  <Step title="Stage the files you want to include">
+    Click the stage button (the plus icon) next to each file in the **Changes** section of the git panel. Staged files move to the **Staged** section.
+  </Step>
+  <Step title="Click Commit Staged">
+    Once you have at least one staged file, the **Commit Staged** button becomes active. Click it.
+  </Step>
+  <Step title="Enter a commit message">
+    Type a commit message in the prompt that appears and confirm.
+  </Step>
+  <Step title="Push to remote">
+    After committing, click **Push** in the branch bar to push the commit to the configured upstream.
+  </Step>
+</Steps>
+
+<Note>
+  The `COLLABMD_GIT_USER_NAME` and `COLLABMD_GIT_USER_EMAIL` environment variables must be set for in-app commits to record the correct author identity. Without them, git will fall back to the global git config of the process user, or reject the commit if no identity is configured.
+</Note>
+
+## Git environment variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `COLLABMD_GIT_ENABLED` | Enable or disable git features in the UI and API | `true` |
+| `COLLABMD_GIT_USER_NAME` | Git author name for in-app commits | — |
+| `COLLABMD_GIT_USER_EMAIL` | Git author email for in-app commits | — |
+
+To disable the git panel entirely:
+
+```bash
+COLLABMD_GIT_ENABLED=false collabmd ~/my-vault
+```
+
+## Git-backed vault bootstrap
+
+For server deployments, CollabMD can clone a private git repository into the vault directory on first boot and reuse the same checkout on subsequent starts.
+
+Set `COLLABMD_GIT_REPO_URL` to enable bootstrapping:
+
+```bash
+docker run \
+  -p 1234:1234 \
+  -v /path/to/persistent/vault:/data \
+  -e COLLABMD_GIT_REPO_URL=git@github.com:your-org/your-vault.git \
+  -e COLLABMD_GIT_SSH_PRIVATE_KEY_B64="$(base64 < ~/.ssh/id_ed25519 | tr -d '\n')" \
+  -e COLLABMD_GIT_USER_NAME="CollabMD Bot" \
+  -e COLLABMD_GIT_USER_EMAIL="bot@example.com" \
+  ghcr.io/andes90/collabmd:latest
+```
+
+### Startup behavior
+
+| State of vault directory | What CollabMD does |
+|--------------------------|--------------------|
+| Empty / does not exist | Clones `COLLABMD_GIT_REPO_URL` into the vault path |
+| Clean checkout, same remote | Fast-forwards to the remote default branch |
+| Dirty checkout, same remote | Reuses the checkout as-is; skips the sync |
+| Existing checkout with a different remote | Startup fails with an error |
+
+After bootstrap, CollabMD adds `.collabmd/` to `.git/info/exclude` so that runtime metadata stays out of `git status`. The tracked `.gitignore` file is never modified.
+
+### SSH authentication
+
+Two methods are supported for SSH key auth. File-based keys take precedence:
+
+**File-based (preferred)**
+
+```bash
+-e COLLABMD_GIT_SSH_PRIVATE_KEY_FILE=/run/secrets/collabmd_git_key
+```
+
+Mount the key file as a secret and pass the path. You can also pass a known-hosts file to enable strict host verification:
+
+```bash
+-e COLLABMD_GIT_SSH_KNOWN_HOSTS_FILE=/run/secrets/collabmd_known_hosts
+```
+
+**Base64-encoded key**
+
+```bash
+-e COLLABMD_GIT_SSH_PRIVATE_KEY_B64="$(base64 < ~/.ssh/id_ed25519 | tr -d '\n')"
+```
+
+If `COLLABMD_GIT_SSH_KNOWN_HOSTS_FILE` is not set, SSH falls back to `StrictHostKeyChecking=accept-new`.
+
+### Bootstrap environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `COLLABMD_GIT_REPO_URL` | Remote repository URL used to bootstrap the vault on first boot |
+| `COLLABMD_GIT_SSH_PRIVATE_KEY_FILE` | Path to the SSH private key file (preferred over base64) |
+| `COLLABMD_GIT_SSH_PRIVATE_KEY_B64` | Base64-encoded SSH private key |
+| `COLLABMD_GIT_SSH_KNOWN_HOSTS_FILE` | Path to a `known_hosts` file for strict SSH host verification |
+
+For a complete Docker and Coolify deployment walkthrough, including SSH deploy-key setup, see [Private git deployment](/deployment/private-git).

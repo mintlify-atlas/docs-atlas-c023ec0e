@@ -1,0 +1,71 @@
+---
+title: "Docker"
+description: "Run CollabMD in a container using the published image or docker-compose with a local PlantUML server."
+---
+
+## Quick start
+
+The published image is `ghcr.io/andes90/collabmd:latest`. The container listens on `0.0.0.0:1234` and stores vault files at `/data`.
+
+```bash
+docker run -p 1234:1234 -v /path/to/vault:/data ghcr.io/andes90/collabmd:latest
+```
+
+Open `http://localhost:1234`.
+
+## docker-compose with local PlantUML
+
+The included `docker-compose.yml` starts CollabMD together with a `plantuml/plantuml-server:jetty` container and sets `PLANTUML_SERVER_URL` automatically so PlantUML rendering never hits the public renderer.
+
+```bash
+mkdir -p data/vault
+docker compose up
+```
+
+Open `http://localhost:1234`.
+
+<Note>
+  The PlantUML container is also published on loopback at `http://127.0.0.1:18080`, so the host-based CLI can reuse it with `npm run start:local-plantuml`.
+</Note>
+
+## Using a local image during development
+
+By default, compose uses `COLLABMD_IMAGE=ghcr.io/andes90/collabmd:latest`. To test a locally built image instead:
+
+```bash
+docker build -t collabmd:local .
+COLLABMD_IMAGE=collabmd:local docker compose up
+```
+
+## Custom vault path
+
+To use an existing vault on your machine instead of `./data/vault`:
+
+```bash
+HOST_VAULT_DIR=/absolute/path/to/vault docker compose up
+```
+
+## Custom host port
+
+To bind the container to a different host port:
+
+```bash
+COLLABMD_HOST_PORT=3000 docker compose up
+```
+
+## Health check
+
+The container and compose service both include a built-in health check:
+
+```bash
+GET /health
+```
+
+The Dockerfile configures it as:
+
+```text
+HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:1234/health || exit 1
+```
+
+Allow sufficient startup grace (`start_period`) when `COLLABMD_GIT_REPO_URL` is set, as the initial clone may take longer than a local vault start.

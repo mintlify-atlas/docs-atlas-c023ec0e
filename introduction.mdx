@@ -1,0 +1,92 @@
+---
+title: "Introduction"
+description: "Realtime collaboration for Markdown folders, diagrams, and git-backed docs — without migrating your files."
+---
+
+CollabMD turns any local Markdown folder, Obsidian-style vault, or git-backed docs repo into a collaborative web workspace you can open in a browser. Your files stay exactly where they are — on disk, in plain text.
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Get CollabMD running in under a minute with a single npx command
+  </Card>
+  <Card title="Installation Options" icon="download" href="/installation">
+    npx, Homebrew, Docker, or install from source
+  </Card>
+  <Card title="Editor Guide" icon="pen-to-square" href="/guides/editor">
+    Markdown editor, live preview, wiki-links, and outline navigation
+  </Card>
+  <Card title="Deployment" icon="server" href="/deployment/docker">
+    Run CollabMD on a server with Docker, Coolify, or a private git vault
+  </Card>
+</CardGroup>
+
+## What is CollabMD?
+
+CollabMD is a self-hosted CLI tool that serves any directory of Markdown files as a realtime collaborative web application. It is built for teams that want the power of a collaborative editor without giving up their local filesystem as the source of truth.
+
+Point it at your existing vault:
+
+```bash
+npx collabmd@latest ~/my-vault --no-tunnel
+```
+
+Everyone with access to the URL can open the same files, edit simultaneously, and see each other's cursors — just like Google Docs, but backed by plain `.md` files on your disk.
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="No migration" icon="folder-open">
+    Point CollabMD at an existing Markdown folder. Files stay on disk exactly as-is — no import, no conversion, no lock-in.
+  </Card>
+  <Card title="Realtime collaboration" icon="users">
+    Multiple people edit the same file simultaneously via Yjs CRDTs. Presence indicators and follow mode keep the team in sync.
+  </Card>
+  <Card title="Diagram support" icon="diagram-project">
+    Mermaid fences, standalone `.mmd` files, PlantUML `.puml` files, and `.excalidraw` whiteboards — all render live in preview.
+  </Card>
+  <Card title="Source-anchored comments" icon="comment">
+    Comment on any line or text selection. Threads are anchored to the source and visible from both the editor and the rendered preview.
+  </Card>
+  <Card title="Wiki-links & backlinks" icon="link">
+    Use `[[wiki-links]]` to connect notes. Backlinks panel shows all notes that reference the current file.
+  </Card>
+  <Card title="Git integration" icon="code-branch">
+    Bootstrap a vault from a private git repo via SSH. Stage, commit, and push changes from inside the app.
+  </Card>
+  <Card title="Password protection" icon="lock">
+    Protect public sessions with `--auth password`. CollabMD generates a session secret and password automatically.
+  </Card>
+  <Card title="Cloudflare Tunnel" icon="globe">
+    Share a running session instantly over the internet via Cloudflare Quick Tunnel — no port forwarding required.
+  </Card>
+</CardGroup>
+
+## How it works
+
+CollabMD runs a lightweight Node.js server that:
+
+1. Reads your Markdown files from disk at startup
+2. Opens a WebSocket-based collaboration room per file using Yjs
+3. Serves a browser-based editor (CodeMirror + React) and live preview
+4. Writes changes back to disk as plain text as you type
+
+Your filesystem is always the source of truth. CollabMD does not move, rename, or delete files unless you explicitly do so inside the app.
+
+## Best fit for
+
+- Collaborating on an existing Obsidian-style vault without migrating files
+- Reviewing RFCs, product docs, architecture notes, and runbooks in real time
+- Commenting on drafts and diagrams with anchored threads instead of side-channel feedback
+- Sharing Markdown-heavy knowledge bases with remote teammates
+- Giving browser access to collaborators who do not use your local Markdown setup
+
+## Current limitations
+
+<Warning>
+  CollabMD is a single-instance deployment only. Room state is kept in-process and is not shared across replicas.
+</Warning>
+
+- **Single instance**: collaboration state lives in memory; horizontal scaling is not supported
+- **OIDC auth**: reserved for a future release — `--auth oidc` is not yet available
+- **Excalidraw comments**: source-anchored comments do not apply to `.excalidraw` files
+- **Windows**: supported via WSL2, not native Windows execution

@@ -1,0 +1,70 @@
+---
+title: "Collaboration"
+description: "Realtime multi-user editing, presence indicators, follow mode, and room chat — powered by Yjs CRDTs over WebSocket."
+---
+
+CollabMD is built for simultaneous editing. Multiple people can open the same file at the same time, and their changes merge automatically without conflicts.
+
+<CardGroup cols={2}>
+  <Card title="Realtime editing" icon="users">
+    Multiple editors in the same file, synced via Yjs CRDTs
+  </Card>
+  <Card title="Presence" icon="circle-user">
+    See who is online and where their cursor is
+  </Card>
+  <Card title="Follow mode" icon="eye">
+    Follow another collaborator's active cursor as they navigate
+  </Card>
+  <Card title="Room chat" icon="message">
+    Discuss changes in the built-in chat without leaving the workspace
+  </Card>
+</CardGroup>
+
+## Realtime editing with Yjs
+
+CollabMD uses [Yjs](https://yjs.dev/) CRDTs (Conflict-free Replicated Data Types) to merge concurrent edits. When two people type in the same document at the same time, both sets of changes are applied without either author having to resolve a conflict manually.
+
+Yjs state is kept in a collaboration room per open file. When the last collaborator closes a file, the room writes its final state to disk and shuts down. The next person to open the file loads from disk again.
+
+## Collaborator presence
+
+When multiple people have the same file open, each collaborator's cursor position is visible to everyone else. Presence is broadcast over the same WebSocket connection that syncs document changes.
+
+## Follow mode
+
+Follow mode lets you shadow another collaborator's view. When you follow someone, your editor and preview scroll automatically to match their active cursor position. This is useful during reviews or walkthroughs where one person is driving.
+
+## Room chat
+
+Each workspace includes a room chat panel for discussing changes without leaving the app. Chat messages are ephemeral and scoped to the running session — they are not stored to disk.
+
+## How collaboration rooms work
+
+CollabMD opens one collaboration room per file that is currently being edited. Rooms are managed in-process by the Node.js server:
+
+1. A collaborator opens a file — the server creates a room and loads the file from disk into a Yjs document
+2. Additional collaborators join the same WebSocket endpoint — `GET /ws/:file` — and receive the current document state
+3. Each keystroke is broadcast to all connected clients as a Yjs update
+4. When the room becomes empty, CollabMD waits for a brief idle grace period, then writes the final document state to disk and destroys the room
+
+<Warning>
+  CollabMD is a **single-instance deployment only**. Collaboration room state is kept in-process and is not shared across replicas. Running multiple instances behind a load balancer will cause split-brain behavior. Deploy a single container or process only.
+</Warning>
+
+## Sharing a session
+
+<Tip>
+  Before sharing a CollabMD URL with external collaborators, start the server with `--auth password` to require a shared password. Anyone with the URL otherwise has full write access to your vault.
+</Tip>
+
+```bash
+collabmd ~/my-vault --auth password
+```
+
+CollabMD prints a generated password to the terminal. Share the URL and password with your collaborators. Restarting the server rotates the password.
+
+To set an explicit password instead of a generated one:
+
+```bash
+collabmd ~/my-vault --auth password --auth-password "shared-secret"
+```

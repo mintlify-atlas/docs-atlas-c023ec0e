@@ -1,0 +1,83 @@
+---
+title: "Comments"
+description: "Source-anchored comment threads on lines and text selections, with inline editor markers, preview bubbles, and a comments drawer."
+---
+
+CollabMD lets you attach comment threads to specific lines or text selections in a file. Threads are source-anchored: the marker stays attached to the text even as the document is edited collaboratively.
+
+<CardGroup cols={2}>
+  <Card title="Line and selection comments" icon="comment">
+    Comment on a whole line or a highlighted text selection
+  </Card>
+  <Card title="Inline editor markers" icon="code">
+    Comment markers appear in the editor gutter next to the anchored line
+  </Card>
+  <Card title="Preview bubbles" icon="eye">
+    Bubbles in the rendered preview show thread counts at the anchored position
+  </Card>
+  <Card title="Comments drawer" icon="list">
+    Review all threads for the current file in one scrollable list
+  </Card>
+</CardGroup>
+
+## How to add a comment
+
+<Steps>
+  <Step title="Open a supported file">
+    Navigate to any Markdown, Mermaid, or PlantUML file in the file explorer. Comments are not available for `.excalidraw` files.
+  </Step>
+  <Step title="Select text or position your cursor">
+    Click on a line to position your cursor, or click and drag to select a range of text. For a text-selection comment, the selected quote is recorded as part of the anchor.
+  </Step>
+  <Step title="Open the comment composer">
+    Click the **Comment** button that appears in the editor toolbar or in the gutter next to your selection. A comment card pops up near the selection.
+  </Step>
+  <Step title="Write your comment and post it">
+    Type your message in the text area and click **Post comment**. The thread is created and anchored to the selected line or text.
+  </Step>
+</Steps>
+
+## Inline editor markers
+
+After a thread is created, a marker icon appears in the editor gutter next to the anchored line. Click the marker to reopen the thread card without re-selecting the text.
+
+When multiple threads share the same anchor position, the marker shows a count badge.
+
+## Preview bubbles
+
+The rendered preview panel also shows comment indicators. A small bubble appears next to the block that corresponds to the comment anchor. Clicking the bubble opens the same thread card.
+
+For text-selection comments, the quoted text is highlighted in the preview when the thread card is open.
+
+## Comments drawer
+
+Open the **Comments** panel to see all threads for the current file in a scrollable list. Each entry shows:
+
+- The anchor label (line number or line range)
+- The quoted text or source excerpt
+- A preview of the most recent message
+- The author name and timestamp of the latest activity
+
+Click any entry to jump to the thread in the editor and open the thread card.
+
+## Thread cards
+
+Thread cards display the full conversation for a group of threads at a given anchor. From a thread card you can:
+
+- Read all messages in the thread
+- **Reply** to add a follow-up message
+- **Jump** to navigate the editor to the anchored line
+- **Resolve** to close the thread
+- React to individual messages with emoji
+
+## Supported file types
+
+Source-anchored comments are supported for:
+
+- Markdown files (`.md`, `.markdown`, `.mdx`)
+- Mermaid files (`.mmd`, `.mermaid`) and inline Mermaid blocks
+- PlantUML files (`.puml`, `.plantuml`) and inline PlantUML blocks
+
+<Note>
+  `.excalidraw` files do not support source-anchored comments. The comments controls are hidden when an Excalidraw file is open.
+</Note>

@@ -1,0 +1,125 @@
+---
+title: "Editor"
+description: "The markdown editing experience in CollabMD: file explorer, CodeMirror editor, live preview, wiki-links, backlinks, outline, and more."
+---
+
+CollabMD opens your vault in a browser-based workspace built around a CodeMirror editor and a live preview panel. Everything you type is written back to disk as plain text.
+
+<CardGroup cols={2}>
+  <Card title="File explorer" icon="folder-open">
+    Browse, create, rename, and delete files and folders from the sidebar
+  </Card>
+  <Card title="Live preview" icon="eye">
+    See rendered output as you type, with syntax-highlighted code blocks
+  </Card>
+  <Card title="Wiki-links" icon="link">
+    Jump between notes with `[[wiki-links]]` and hover for a preview
+  </Card>
+  <Card title="Backlinks" icon="arrow-turn-up">
+    See every note that references the file you are currently editing
+  </Card>
+  <Card title="Outline" icon="list">
+    Navigate sections of long documents from the outline panel
+  </Card>
+  <Card title="Quick switcher" icon="magnifying-glass">
+    Open any file by name without leaving the keyboard
+  </Card>
+</CardGroup>
+
+## File explorer sidebar
+
+The sidebar lists all files and folders in your vault. You can:
+
+- **Browse** the full directory tree
+- **Create** new files and folders with the inline controls
+- **Rename** any item by double-clicking its name
+- **Delete** files and folders from the context menu
+
+The explorer indexes `.md`, `.markdown`, and `.mdx` files for search and backlinks. It also surfaces diagram and whiteboard files so you can open them directly:
+
+| Extension | Type |
+|-----------|------|
+| `.md`, `.markdown`, `.mdx` | Markdown — indexed for wiki-links and backlinks |
+| `.mmd`, `.mermaid` | Mermaid diagram |
+| `.puml`, `.plantuml` | PlantUML diagram |
+| `.excalidraw` | Excalidraw whiteboard |
+
+<Note>
+  `.obsidian`, `.git`, `.trash`, and `node_modules` directories are automatically ignored.
+</Note>
+
+## CodeMirror editor
+
+The editor is built on [CodeMirror](https://codemirror.net/) with Markdown syntax highlighting. It supports standard Markdown editing features including bold, italic, headings, lists, and fenced code blocks with language hints.
+
+The toolbar above the editor provides one-click actions for common formatting operations, including a **Video** action that inserts video embed syntax for you:
+
+```markdown
+![Video](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+```
+
+## Live preview
+
+The preview panel renders your Markdown in real time as you type. It includes:
+
+- Syntax-highlighted code blocks
+- Rendered Mermaid and PlantUML diagrams (when present in fenced blocks)
+- Video embeds for YouTube URLs and direct `.mp4`, `.webm`, and `.ogg` files
+- Scroll sync with the editor
+
+### Video embeds
+
+Video embeds use the standard Markdown image syntax:
+
+```markdown
+![Video](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+![Video](https://cdn.example.com/demo.mp4)
+```
+
+Supported sources: public YouTube URLs and direct public HTTPS video files ending in `.mp4`, `.webm`, or `.ogg`.
+
+### Scroll sync
+
+When you scroll the editor, the preview scrolls to the corresponding position, and vice versa. This keeps the two panels in sync as you work through a long document.
+
+## Wiki-links
+
+CollabMD supports Obsidian-style wiki-link syntax to connect notes:
+
+```markdown
+See [[my-other-note]] for details.
+```
+
+Wiki-links let you:
+
+- **Jump** to the target note by clicking the link in the editor or preview
+- **Hover** over a link to see a preview of the target file without navigating away
+
+Only `.md`, `.markdown`, and `.mdx` files are indexed for wiki-link resolution.
+
+## Backlinks panel
+
+The backlinks panel shows every file in the vault that contains a `[[wiki-link]]` pointing to the file you are currently editing. Click any entry to navigate to that note.
+
+This makes it easy to understand how notes relate to one another, especially in large vaults.
+
+## Outline panel
+
+The outline panel extracts all headings from the current document and displays them as a navigable list. Click any heading to jump the editor and preview to that section.
+
+The outline is useful when editing long documents such as RFCs, runbooks, or architecture notes.
+
+## Quick switcher
+
+Press the quick-switcher shortcut to open a fuzzy-search dialog over all indexed files in the vault. Start typing a filename or path fragment and press Enter to open the file.
+
+The quick switcher is the fastest way to navigate a large vault without reaching for the mouse.
+
+## Supported file types
+
+| File type | Indexed | Editor mode |
+|-----------|---------|-------------|
+| `.md`, `.markdown`, `.mdx` | Yes | Markdown editor + live preview |
+| `.mmd`, `.mermaid` | No | Side-by-side Mermaid editor + preview |
+| `.puml`, `.plantuml` | No | Side-by-side PlantUML editor + preview |
+| `.excalidraw` | No | Excalidraw whiteboard (direct preview) |

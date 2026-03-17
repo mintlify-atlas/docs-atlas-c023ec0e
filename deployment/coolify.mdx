@@ -1,0 +1,118 @@
+---
+title: "Coolify"
+description: "Deploy CollabMD on Coolify with a persistent vault volume and optional private git bootstrap."
+---
+
+CollabMD deploys on [Coolify](https://coolify.io) using the included `Dockerfile`. The setup covers a plain persistent vault, optional private git bootstrap, and subpath configurations.
+
+<Warning>
+  Run a **single replica only**. Collaboration room state is held in-process and is not shared across instances. Multiple replicas will result in split collaboration sessions.
+</Warning>
+
+## Setup guide
+
+<Steps>
+  <Step title="Use the included Dockerfile">
+    Point Coolify at the repository and select the included `Dockerfile` as the build source. The image is built on `node:24-alpine`, installs `git` and `openssh-client`, and sets the default vault directory to `/data`.
+  </Step>
+
+  <Step title="Expose port 1234">
+    Configure Coolify to expose port `1234`. The container binds to `0.0.0.0:1234` by default (`HOST=0.0.0.0`, `PORT=1234`).
+  </Step>
+
+  <Step title="Mount a persistent volume to /data">
+    Mount a persistent volume to `/data` for the vault checkout and runtime files. The volume can be pre-populated with Markdown files or start empty when `COLLABMD_GIT_REPO_URL` is set for git bootstrap.
+  </Step>
+
+  <Step title="Add git bootstrap env vars (optional)">
+    To bootstrap the vault from a private repository, set the following environment variables in Coolify:
+
+    ```text
+    COLLABMD_GIT_REPO_URL=git@github.com:your-org/your-private-vault.git
+    ```
+
+    Then provide SSH credentials using one of the two methods:
+
+    <Tabs>
+      <Tab title="File-based SSH auth">
+        Mount the private key as a read-only secret file and set:
+
+        ```text
+        COLLABMD_GIT_SSH_PRIVATE_KEY_FILE=/run/secrets/collabmd_git_key
+        ```
+      </Tab>
+      <Tab title="Base64 SSH auth">
+        Encode the private key and set it as an environment variable:
+
+        ```bash
+        base64 < ~/.ssh/id_ed25519 | tr -d '\n'
+        ```
+
+        ```text
+        COLLABMD_GIT_SSH_PRIVATE_KEY_B64=<base64-encoded-key>
+        ```
+      </Tab>
+    </Tabs>
+
+    If you want in-app commits to work, also set the git author identity:
+
+    ```text
+    COLLABMD_GIT_USER_NAME=CollabMD Bot
+    COLLABMD_GIT_USER_EMAIL=bot@example.com
+    ```
+  </Step>
+
+  <Step title="Mount known_hosts for strict host verification (optional)">
+    For tighter SSH security in production, mount a `known_hosts` file and set:
+
+    ```text
+    COLLABMD_GIT_SSH_KNOWN_HOSTS_FILE=/run/secrets/collabmd_known_hosts
+    ```
+
+    If this variable is not set, SSH falls back to `StrictHostKeyChecking=accept-new`.
+
+    Generate a `known_hosts` file for GitHub with:
+
+    ```bash
+    ssh-keyscan github.com > collabmd_known_hosts
+    ```
+  </Step>
+
+  <Step title="Configure a health check">
+    Add a health check for `GET /health` with enough startup grace for the initial git clone:
+
+    ```text
+    GET /health
+    interval: 30s
+    timeout: 5s
+    start_period: 45s
+    retries: 3
+    ```
+
+    The `Dockerfile` already includes this health check. When `COLLABMD_GIT_REPO_URL` is set, the initial clone may require a longer grace period than a plain local vault start.
+  </Step>
+
+  <Step title="Run a single replica">
+    Set the replica count to `1`. Collaboration room state is in-process and not shared across instances.
+  </Step>
+
+  <Step title="Set BASE_PATH for subpath deployments (optional)">
+    If CollabMD is mounted under a subpath such as `/collabmd`, set:
+
+    ```text
+    BASE_PATH=/collabmd
+    ```
+  </Step>
+
+  <Step title="Set PUBLIC_WS_BASE_URL only if needed (optional)">
+    Set `PUBLIC_WS_BASE_URL` only if your WebSocket endpoint differs from the app origin:
+
+    ```text
+    PUBLIC_WS_BASE_URL=wss://example.com
+    ```
+
+    <Note>
+      For standard Coolify reverse-proxy setups, same-origin WebSocket routing on `/ws/:file` works as-is. `PUBLIC_WS_BASE_URL` is typically not needed.
+    </Note>
+  </Step>
+</Steps>

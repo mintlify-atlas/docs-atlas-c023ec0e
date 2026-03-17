@@ -1,0 +1,160 @@
+---
+title: "Private Git Repository"
+description: "Bootstrap the CollabMD vault from a private git repository using SSH deploy keys."
+---
+
+When `COLLABMD_GIT_REPO_URL` is set, CollabMD uses `COLLABMD_VAULT_DIR` as a persistent checkout directory rather than a plain local folder.
+
+## Startup behavior
+
+| Condition | What happens |
+|---|---|
+| Directory is missing or empty | Clones the repo into `COLLABMD_VAULT_DIR` |
+| Same repo, clean working tree | Fast-forwards to the remote default branch |
+| Same repo, dirty working tree | Reuses the checkout as-is; skips sync |
+| Different remote | **Startup fails** — intentional |
+
+After clone or validation, CollabMD adds `.collabmd/` to `.git/info/exclude` so runtime metadata stays out of `git status` without modifying the repo's tracked `.gitignore`.
+
+<Warning>
+  If the checkout directory points at a different remote than `COLLABMD_GIT_REPO_URL`, startup will fail. Remove the directory or correct the env var before restarting.
+</Warning>
+
+## Environment variables
+
+| Variable | Description |
+|---|---|
+| `COLLABMD_GIT_REPO_URL` | SSH URL of the private repository |
+| `COLLABMD_GIT_SSH_PRIVATE_KEY_FILE` | Path to the SSH private key file (preferred) |
+| `COLLABMD_GIT_SSH_PRIVATE_KEY_B64` | Base64-encoded private key (alternative) |
+| `COLLABMD_GIT_SSH_KNOWN_HOSTS_FILE` | Path to a `known_hosts` file for strict host verification |
+| `COLLABMD_GIT_USER_NAME` | Git author/committer name for in-app commits |
+| `COLLABMD_GIT_USER_EMAIL` | Git author/committer email for in-app commits |
+
+`COLLABMD_GIT_SSH_PRIVATE_KEY_FILE` takes precedence if both key inputs are set. If `COLLABMD_GIT_SSH_KNOWN_HOSTS_FILE` is not set, SSH falls back to `StrictHostKeyChecking=accept-new`.
+
+## Setup guide
+
+<Steps>
+  <Step title="Generate a dedicated SSH deploy key">
+    Use a dedicated deploy key for CollabMD rather than your personal SSH key.
+
+    ```bash
+    mkdir -p ~/.ssh
+    ssh-keygen -t ed25519 -f ~/.ssh/collabmd-test -C "collabmd-test" -N ""
+    ```
+
+    This creates `~/.ssh/collabmd-test` (private key) and `~/.ssh/collabmd-test.pub` (public key).
+  </Step>
+
+  <Step title="Add the public key to the private repository">
+    For GitHub:
+
+    1. Open the private repository.
+    2. Go to **Settings** → **Deploy keys**.
+    3. Click **Add deploy key**.
+    4. Paste the public key:
+
+    ```bash
+    cat ~/.ssh/collabmd-test.pub
+    ```
+
+    5. Enable **Allow write access** only if you want in-app `push` to work. Read-only is sufficient for clone and pull.
+  </Step>
+
+  <Step title="Create a known_hosts file">
+    For GitHub:
+
+    ```bash
+    ssh-keyscan github.com > ~/.ssh/collabmd_known_hosts
+    chmod 644 ~/.ssh/collabmd_known_hosts
+    ```
+
+    Replace `github.com` if you are using GitLab or another SSH host.
+  </Step>
+
+  <Step title="Set git author identity for in-app commits">
+    Required only if you want CollabMD to commit and push from the UI:
+
+    ```bash
+    export COLLABMD_GIT_USER_NAME="CollabMD Test"
+    export COLLABMD_GIT_USER_EMAIL="you@example.com"
+    ```
+  </Step>
+
+  <Step title="Test locally with the CLI first">
+    Testing the CLI path first is simpler than starting with Docker because startup errors are easier to inspect.
+
+    Export the git settings:
+
+    ```bash
+    export COLLABMD_GIT_REPO_URL="git@github.com:YOUR_ORG/YOUR_PRIVATE_REPO.git"
+    export COLLABMD_GIT_SSH_PRIVATE_KEY_FILE="$HOME/.ssh/collabmd-test"
+    export COLLABMD_GIT_SSH_KNOWN_HOSTS_FILE="$HOME/.ssh/collabmd_known_hosts"
+    ```
+
+    Start the app against an empty or non-existent checkout path:
+
+    ```bash
+    node bin/collabmd.js /tmp/collabmd-git-test --no-tunnel
+    ```
+
+    CollabMD will clone the repo into `/tmp/collabmd-git-test` and start serving it. Verify the checkout:
+
+    ```bash
+    ls -la /tmp/collabmd-git-test
+    git -C /tmp/collabmd-git-test remote -v
+    git -C /tmp/collabmd-git-test status
+    ```
+  </Step>
+
+  <Step title="Test restart behavior">
+    Stop the app and start it again with the same directory:
+
+    ```bash
+    node bin/collabmd.js /tmp/collabmd-git-test --no-tunnel
+    ```
+
+    On restart, CollabMD validates that `origin` matches, then fast-forwards the remote default branch if the checkout is clean, or reuses the checkout as-is if there are local changes.
+  </Step>
+
+  <Step title="Test with Docker">
+    <Tabs>
+      <Tab title="File-based SSH auth">
+        Mount the private key and `known_hosts` as read-only secret files:
+
+        ```bash
+        docker run --rm \
+          -p 1234:1234 \
+          -v /tmp/collabmd-docker-test:/data \
+          -v "$HOME/.ssh/collabmd-test:/run/secrets/collabmd_git_key:ro" \
+          -v "$HOME/.ssh/collabmd_known_hosts:/run/secrets/collabmd_known_hosts:ro" \
+          -e COLLABMD_GIT_REPO_URL="git@github.com:YOUR_ORG/YOUR_PRIVATE_REPO.git" \
+          -e COLLABMD_GIT_SSH_PRIVATE_KEY_FILE=/run/secrets/collabmd_git_key \
+          -e COLLABMD_GIT_SSH_KNOWN_HOSTS_FILE=/run/secrets/collabmd_known_hosts \
+          -e COLLABMD_GIT_USER_NAME="CollabMD Test" \
+          -e COLLABMD_GIT_USER_EMAIL="you@example.com" \
+          ghcr.io/andes90/collabmd:latest
+        ```
+      </Tab>
+      <Tab title="Base64 SSH auth">
+        Pass the private key as a base64-encoded environment variable:
+
+        ```bash
+        docker run --rm \
+          -p 1234:1234 \
+          -v /tmp/collabmd-docker-test-b64:/data \
+          -v "$HOME/.ssh/collabmd_known_hosts:/run/secrets/collabmd_known_hosts:ro" \
+          -e COLLABMD_GIT_REPO_URL="git@github.com:YOUR_ORG/YOUR_PRIVATE_REPO.git" \
+          -e COLLABMD_GIT_SSH_PRIVATE_KEY_B64="$(base64 < ~/.ssh/collabmd-test | tr -d '\n')" \
+          -e COLLABMD_GIT_SSH_KNOWN_HOSTS_FILE=/run/secrets/collabmd_known_hosts \
+          -e COLLABMD_GIT_USER_NAME="CollabMD Test" \
+          -e COLLABMD_GIT_USER_EMAIL="you@example.com" \
+          ghcr.io/andes90/collabmd:latest
+        ```
+      </Tab>
+    </Tabs>
+
+    Open `http://localhost:1234`.
+  </Step>
+</Steps>

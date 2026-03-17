@@ -1,0 +1,113 @@
+---
+title: "Troubleshooting"
+description: "Solutions for common issues encountered when running CollabMD."
+---
+
+<AccordionGroup>
+
+  <Accordion title="`npx collabmd@latest` fails immediately">
+    CollabMD requires **Node.js 24**. Confirm your version:
+
+    ```bash
+    node --version
+    ```
+
+    If the version is below 24, install or switch to Node.js 24 before running `npx collabmd@latest`.
+  </Accordion>
+
+  <Accordion title="App is reachable only from localhost">
+    By default CollabMD binds to `127.0.0.1`. To expose the server on your local network, pass
+    `--host 0.0.0.0` or set the `HOST` environment variable:
+
+    ```bash
+    collabmd --host 0.0.0.0
+    # or
+    HOST=0.0.0.0 collabmd
+    ```
+  </Accordion>
+
+  <Accordion title="Port 1234 is already in use">
+    Choose a different port with `--port` or the `PORT` environment variable:
+
+    ```bash
+    collabmd --port 3000
+    # or
+    PORT=3000 collabmd
+    ```
+  </Accordion>
+
+  <Accordion title="Tunnel did not start">
+    CollabMD starts a Cloudflare Quick Tunnel only when `cloudflared` is found on `PATH`.
+
+    Install `cloudflared`:
+
+    - macOS: `brew install cloudflared`
+    - Linux / Windows (WSL2): see the [official installer](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)
+
+    If you do not need a tunnel, pass `--no-tunnel` to stay local-only:
+
+    ```bash
+    collabmd --no-tunnel
+    ```
+  </Accordion>
+
+  <Accordion title="`--local-plantuml` fails">
+    `--local-plantuml` starts a PlantUML container using Docker Compose. Ensure Docker is
+    installed and the Docker daemon is running before passing this flag.
+
+    If you cannot use Docker, point `PLANTUML_SERVER_URL` at another PlantUML server instead:
+
+    ```bash
+    PLANTUML_SERVER_URL=http://my-plantuml-host:8080/plantuml collabmd
+    ```
+  </Accordion>
+
+  <Accordion title="Private git bootstrap fails on startup">
+    When `COLLABMD_GIT_REPO_URL` is set, CollabMD clones the repo on first boot using SSH.
+    Check the following:
+
+    - `COLLABMD_GIT_REPO_URL` is a valid SSH git URL.
+    - Either `COLLABMD_GIT_SSH_PRIVATE_KEY_FILE` or `COLLABMD_GIT_SSH_PRIVATE_KEY_B64` is set
+      and points to the correct key.
+    - The deploy key has at least read access to the repository.
+    - If strict host verification is required, set `COLLABMD_GIT_SSH_KNOWN_HOSTS_FILE` to a
+      valid `known_hosts` file. Without it, CollabMD falls back to
+      `StrictHostKeyChecking=accept-new`.
+  </Accordion>
+
+  <Accordion title="WSL2 path issues">
+    CollabMD may behave unexpectedly when pointed at a directory on a mounted Windows filesystem
+    (e.g. `/mnt/c/...`). Run CollabMD against a directory inside your Linux filesystem instead:
+
+    ```bash
+    collabmd ~/my-vault --no-tunnel
+    ```
+  </Accordion>
+
+  <Accordion title="Dirty git checkout skips sync">
+    If the vault directory already exists and has uncommitted local changes at startup, CollabMD
+    reuses the checkout as-is and skips the fast-forward pull from the remote. Commit or stash
+    any local changes before restarting to allow the sync to proceed.
+  </Accordion>
+
+  <Accordion title="Mismatched git remote">
+    If the existing checkout's `origin` remote does not match `COLLABMD_GIT_REPO_URL`, startup
+    fails with a mismatch error. To resolve it, either:
+
+    - Delete the checkout directory and let CollabMD re-clone it, or
+    - Update the remote URL to match: `git remote set-url origin <COLLABMD_GIT_REPO_URL>`
+  </Accordion>
+
+  <Accordion title="Push fails from the UI">
+    The most common cause is a read-only deploy key. Ensure the SSH deploy key configured via
+    `COLLABMD_GIT_SSH_PRIVATE_KEY_FILE` or `COLLABMD_GIT_SSH_PRIVATE_KEY_B64` has **write**
+    access to the repository, not just read access.
+  </Accordion>
+
+</AccordionGroup>
+
+## Getting help
+
+If your issue is not listed above, open a bug report or question on the GitHub issue tracker:
+
+https://github.com/andes90/collabmd/issues
