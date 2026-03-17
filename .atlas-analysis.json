@@ -1,0 +1,88 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "CollabMD",
+  "projectDescription": "A CLI tool that turns any local Markdown folder or Obsidian-style vault into a realtime collaborative web workspace with diagram support and git integration.",
+  "theme": "palm",
+  "primaryColor": "#16A34A",
+  "lightColor": "#DCFCE7",
+  "darkColor": "#14532D",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Using CollabMD",
+            "pages": [
+              "guides/editor",
+              "guides/diagrams",
+              "guides/collaboration",
+              "guides/comments",
+              "guides/git-integration"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/docker",
+              "deployment/private-git",
+              "deployment/cloudflare-tunnel",
+              "deployment/coolify"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/cli",
+              "reference/environment-variables",
+              "reference/security",
+              "reference/troubleshooting"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Realtime collaborative markdown editing via Yjs — no file migration required",
+    "Mermaid, PlantUML, and Excalidraw diagram support",
+    "Source-anchored comments and team chat with collaborator presence",
+    "Wiki-links, backlinks, outline, and quick switcher for Obsidian-style vaults",
+    "Git-backed vaults with private repo bootstrap via SSH",
+    "Optional Cloudflare Quick Tunnel for instant public sharing",
+    "Docker and Coolify deployment with persistent volume support",
+    "Password authentication for protected public sessions"
+  ],
+  "publicApiSurface": [
+    "collabmd [directory] [options]",
+    "--port / -p",
+    "--host",
+    "--auth (none | password)",
+    "--auth-password",
+    "--local-plantuml",
+    "--no-tunnel",
+    "--version / -v",
+    "--help / -h",
+    "GET /health",
+    "WS /ws/:file",
+    "COLLABMD_GIT_REPO_URL",
+    "COLLABMD_GIT_SSH_PRIVATE_KEY_FILE",
+    "COLLABMD_GIT_SSH_PRIVATE_KEY_B64",
+    "COLLABMD_GIT_SSH_KNOWN_HOSTS_FILE",
+    "COLLABMD_GIT_USER_NAME",
+    "COLLABMD_GIT_USER_EMAIL",
+    "AUTH_STRATEGY",
+    "AUTH_PASSWORD",
+    "BASE_PATH",
+    "PLANTUML_SERVER_URL",
+    "PUBLIC_WS_BASE_URL"
+  ]
+}
